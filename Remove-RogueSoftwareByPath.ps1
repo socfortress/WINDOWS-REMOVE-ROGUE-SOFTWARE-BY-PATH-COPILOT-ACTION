@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $true)]
+  [Parameter(Mandatory=$true)]
   [string]$TargetPath,
   [switch]$Quarantine,
   [string]$LogPath = "$env:TEMP\RemoveRogueSoftware-script.log",
@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $HostName = $env:COMPUTERNAME
 $LogMaxKB = 100
 $LogKeep = 5
-$Timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+$runStart = Get-Date
 
 function Write-Log {
   param([string]$Message,[ValidateSet('INFO','WARN','ERROR','DEBUG')]$Level='INFO')
@@ -30,7 +30,8 @@ function Rotate-Log {
   if (Test-Path $LogPath -PathType Leaf) {
     if ((Get-Item $LogPath).Length/1KB -gt $LogMaxKB) {
       for ($i = $LogKeep - 1; $i -ge 0; $i--) {
-        $old = "$LogPath.$i"; $new = "$LogPath." + ($i + 1)
+        $old = "$LogPath.$i"
+        $new = "$LogPath." + ($i + 1)
         if (Test-Path $old) { Rename-Item $old $new -Force }
       }
       Rename-Item $LogPath "$LogPath.1" -Force
@@ -39,21 +40,31 @@ function Rotate-Log {
 }
 
 Rotate-Log
-$runStart = Get-Date
+
+try {
+  if (Test-Path $ARLog) {
+    Remove-Item -Path $ARLog -Force -ErrorAction Stop
+  }
+  New-Item -Path $ARLog -ItemType File -Force | Out-Null
+  Write-Log "Active response log cleared for fresh run."
+} catch {
+  Write-Log "Failed to clear ${ARLog}: $($_.Exception.Message)" 'WARN'
+}
+
 Write-Log "=== SCRIPT START : Remove Rogue Software at $TargetPath ==="
 
 $FullPath = (Resolve-Path $TargetPath -ErrorAction SilentlyContinue).Path
 if (-not $FullPath) {
-  Write-Log "Target path $TargetPath not found, exiting." 'ERROR'
+  Write-Log "Target path $TargetPath not found." 'ERROR'
   $result = @{
     timestamp = (Get-Date).ToString('o')
-    host      = $HostName
-    action    = 'remove_rogue_software'
-    status    = 'error'
-    target    = $TargetPath
-    error     = 'Path not found'
+    host = $HostName
+    action = 'remove_rogue_software'
+    target = $TargetPath
+    status = 'error'
+    error = 'Path not found'
   }
-  $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Append -Encoding ascii -Width 2000
+  $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Encoding ascii -Width 2000
   exit 1
 }
 
@@ -66,11 +77,9 @@ try {
         Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         $actionsTaken += "Killed process $($_.Name)"
       }
-    } catch { }
+    } catch {}
   }
-
-$taskMatches = schtasks /Query /FO LIST /V | Select-String -SimpleMatch -Pattern $FullPath -Context 0,10
-
+  $taskMatches = schtasks /Query /FO LIST /V | Select-String -SimpleMatch -Pattern $FullPath -Context 0,10
   if ($taskMatches) {
     foreach ($line in $taskMatches) {
       if ($line -match "TaskName:\s+(.+)") {
@@ -80,21 +89,17 @@ $taskMatches = schtasks /Query /FO LIST /V | Select-String -SimpleMatch -Pattern
       }
     }
   }
-
-
   if ($Quarantine) {
     $QuarantineDir = "C:\Quarantine"
     if (-not (Test-Path $QuarantineDir)) { New-Item -Path $QuarantineDir -ItemType Directory -Force | Out-Null }
     $dest = Join-Path $QuarantineDir (Split-Path $FullPath -Leaf)
     Move-Item -Path $FullPath -Destination $dest -Force
-
     icacls $dest /inheritance:r /grant:r "Everyone:(R)" /deny "Everyone:(X)" | Out-Null
     $actionsTaken += "Quarantined $FullPath to $dest"
   } else {
     Remove-Item -Path $FullPath -Recurse -Force -ErrorAction Stop
     $actionsTaken += "Deleted $FullPath"
   }
-
   $RegPaths = @(
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
     "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
@@ -107,34 +112,31 @@ $taskMatches = schtasks /Query /FO LIST /V | Select-String -SimpleMatch -Pattern
           Remove-Item -Path $_.PSPath -Recurse -Force
           $actionsTaken += "Removed registry uninstall entry for $FullPath"
         }
-      } catch { }
+      } catch {}
     }
   }
-
   $result = @{
     timestamp = (Get-Date).ToString('o')
-    host      = $HostName
-    action    = 'remove_rogue_software'
-    target    = $FullPath
-    status    = 'success'
-    actions   = $actionsTaken
+    host = $HostName
+    action = 'remove_rogue_software'
+    target = $FullPath
+    status = 'success'
+    actions = $actionsTaken
   }
-  $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Append -Encoding ascii -Width 2000
+  $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Encoding ascii -Width 2000
   Write-Log "Completed rogue software removal for $FullPath" 'INFO'
-}
-catch {
+} catch {
   Write-Log $_.Exception.Message 'ERROR'
   $result = @{
     timestamp = (Get-Date).ToString('o')
-    host      = $HostName
-    action    = 'remove_rogue_software'
-    target    = $FullPath
-    status    = 'error'
-    error     = $_.Exception.Message
+    host = $HostName
+    action = 'remove_rogue_software'
+    target = $FullPath
+    status = 'error'
+    error = $_.Exception.Message
   }
   $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Append -Encoding ascii -Width 2000
-}
-finally {
+} finally {
   $dur = [int]((Get-Date) - $runStart).TotalSeconds
   Write-Log "=== SCRIPT END : duration ${dur}s ==="
 }
