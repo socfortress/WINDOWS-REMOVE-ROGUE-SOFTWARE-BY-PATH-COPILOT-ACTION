@@ -122,6 +122,7 @@ try {
     target = $FullPath
     status = 'success'
     actions = $actionsTaken
+    copilot_soar = $true
   }
   $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Encoding ascii -Width 2000
   Write-Log "Completed rogue software removal for $FullPath" 'INFO'
@@ -134,6 +135,7 @@ try {
     target = $FullPath
     status = 'error'
     error = $_.Exception.Message
+    copilot_soar = $true
   }
   $result | ConvertTo-Json -Compress | Out-File -FilePath $ARLog -Append -Encoding ascii -Width 2000
 } finally {
