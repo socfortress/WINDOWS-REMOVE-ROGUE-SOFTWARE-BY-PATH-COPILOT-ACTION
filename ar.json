@@ -1,0 +1,40 @@
+{
+  "active_response_name": "WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-ACTIVERESPONSE",
+  "description": "Removes or quarantines rogue software by its installation path. Stops related processes, deletes associated scheduled tasks, optionally quarantines the target folder, and cleans up registry uninstall entries. Produces a JSON log of actions taken.",
+  "technology": "Windows",
+  "icon": "windows",
+  "script_parameters": [
+    {
+      "name": "TargetPath",
+      "type": "string",
+      "required": true,
+      "description": "Full path to the rogue software directory or executable to remove or quarantine.",
+      "default": null
+    },
+    {
+      "name": "Quarantine",
+      "type": "boolean",
+      "required": false,
+      "description": "If set, moves the rogue software to C:\\Quarantine instead of deleting it, and restricts permissions.",
+      "default": false
+    },
+    {
+      "name": "LogPath",
+      "type": "string",
+      "required": false,
+      "description": "Path to the rotating human-readable script log.",
+      "default": "%TEMP%/RemoveRogueSoftware-script.log"
+    },
+    {
+      "name": "ARLog",
+      "type": "string",
+      "required": false,
+      "description": "Active Response JSON log path. Overwrites existing content.",
+      "default": "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"
+    }
+  ],
+  "repo_url": "https://github.com/socfortress/WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-ACTIVERESPONSE",
+  "script_name": "Remove-RogueSoftwareByPath.ps1",
+  "version": "1.0.0",
+  "last_updated": "2025-08-22T00:00:00Z"
+}
