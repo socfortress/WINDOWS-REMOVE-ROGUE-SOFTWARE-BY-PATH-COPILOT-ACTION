@@ -1,5 +1,5 @@
 {
-  "copilot_action_name": "WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-ACTIVERESPONSE",
+  "copilot_action_name": "WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-COPILOT-ACTION",
   "description": "Removes or quarantines rogue software by its installation path. Stops related processes, deletes associated scheduled tasks, optionally quarantines the target folder, and cleans up registry uninstall entries. Produces a JSON log of actions taken.",
   "technology": "Windows",
   "icon": "windows",
