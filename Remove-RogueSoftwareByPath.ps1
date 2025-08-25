@@ -6,7 +6,7 @@ param(
   [string]$LogPath = "$env:TEMP\RemoveRogueSoftware-script.log",
   [string]$ARLog = 'C:\Program Files (x86)\ossec-agent\active-response\active-responses.log'
 )
-
+if ($Arg1 -and -not $TargetPath) {$TargetPath = $Arg1}
 $ErrorActionPreference = 'Stop'
 $HostName = $env:COMPUTERNAME
 $LogMaxKB = 100
@@ -142,4 +142,5 @@ try {
   $dur = [int]((Get-Date) - $runStart).TotalSeconds
   Write-Log "=== SCRIPT END : duration ${dur}s ==="
 }
+
 
