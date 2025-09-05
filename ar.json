@@ -9,7 +9,8 @@
       "type": "string",
       "required": true,
       "description": "Full path to the rogue software directory or executable to remove or quarantine.",
-      "default": null
+      "default": null,
+      "arg_position" : "1"
     },
     {
       "name": "Quarantine",
@@ -17,6 +18,7 @@
       "required": false,
       "description": "If set, moves the rogue software to C:\\Quarantine instead of deleting it, and restricts permissions.",
       "default": false
+      "arg_position" : "2",
     },
     {
       "name": "LogPath",
