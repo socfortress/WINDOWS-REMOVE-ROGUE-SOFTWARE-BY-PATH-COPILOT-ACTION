@@ -1,6 +1,6 @@
 {
   "copilot_action_name": "WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-COPILOT-ACTION",
-  "description": "Removes or quarantines rogue software by its installation path. Stops related processes, deletes associated scheduled tasks, optionally quarantines the target folder, and cleans up registry uninstall entries. Produces a JSON log of actions taken.",
+  "description": "Removes or quarantines rogue software by its installation path. Stops related processes, deletes associated scheduled tasks and Run keys, quarantines the target into C:\\Quarantine with restricted ACLs, and writes a JSON manifest. (Default for TargetPath: none — required.)",
   "technology": "Windows",
   "icon": "windows",
   "script_parameters": [
@@ -8,34 +8,12 @@
       "name": "TargetPath",
       "type": "string",
       "required": true,
-      "description": "Full path to the rogue software directory or executable to remove or quarantine.",
+      "description": "Full path to the rogue software directory or executable to quarantine. Default: none (required).",
       "default": null,
-      "arg_position" : "1"
-    },
-    {
-      "name": "Quarantine",
-      "type": "boolean",
-      "required": false,
-      "description": "If set, moves the rogue software to C:\\Quarantine instead of deleting it, and restricts permissions.",
-      "default": false
-      "arg_position" : "2",
-    },
-    {
-      "name": "LogPath",
-      "type": "string",
-      "required": false,
-      "description": "Path to the rotating human-readable script log.",
-      "default": "%TEMP%/RemoveRogueSoftware-script.log"
-    },
-    {
-      "name": "ARLog",
-      "type": "string",
-      "required": false,
-      "description": "Active Response JSON log path. Overwrites existing content.",
-      "default": "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"
+      "arg_position": "1"
     }
   ],
-  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-COPILOT-ACTION/refs/heads/main",
+  "repo_url": "https://raw.githubusercontent.com/socfortress/WINDOWS-REMOVE-ROGUE-SOFTWARE-BY-PATH-COPILOT-ACTION/refs/heads/main/Remove-RogueSoftwareByPath.ps1",
   "script_name": "Remove-RogueSoftwareByPath.ps1",
   "version": "1.0.0",
   "last_updated": "2025-08-22T00:00:00Z"
