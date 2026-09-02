@@ -90,10 +90,19 @@ function Quarantine-Path {
   }
   $mfPath = Join-Path $finalDir '_manifest.json'
   $manifest | ConvertTo-Json -Depth 5 | Set-Content -Path $mfPath -Encoding utf8
+  # Use well-known SIDs to avoid dependency on localized account names:
+  # S-1-5-32-544 = BUILTIN\Administrators
+  # S-1-5-18     = NT AUTHORITY\SYSTEM
+  # S-1-5-32-545 = BUILTIN\Users
+
   icacls $finalDir /inheritance:r | Out-Null
-  icacls $finalDir /grant:r "Administrators:(F)" "SYSTEM:(F)" "Users:(R)" | Out-Null
+  icacls $finalDir /grant:r "*S-1-5-32-544:(F)" "*S-1-5-18:(F)" "*S-1-5-32-545:(R)" | Out-Null
+
   Get-ChildItem -LiteralPath $finalDir -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
-    try { icacls $_.FullName /inheritance:r /grant:r "Administrators:(F)" "SYSTEM:(F)" "Users:(R)" | Out-Null } catch {}
+      try {
+          icacls $_.FullName /inheritance:r /grant:r "*S-1-5-32-544:(F)" "*S-1-5-18:(F)" "*S-1-5-32-545:(R)" | Out-Null
+      }
+      catch {}
   }
 
   return @{ QuarantineDir=$finalDir; Manifest=$mfPath }
